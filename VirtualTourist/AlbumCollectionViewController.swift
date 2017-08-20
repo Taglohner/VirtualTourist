@@ -13,17 +13,26 @@ import CoreData
 
 class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, NSFetchedResultsControllerDelegate {
     
-    //MARK: Properties
+    // MARK: Outtlets
     
     @IBOutlet weak var albumCollectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
     var pin = Pin()
     
+    // MARK: Indexes
+    
+    var selectedIndexes = [IndexPath]()
+    var insertedIndexPaths: [IndexPath]!
+    var deletedIndexPaths: [IndexPath]!
+    var updatedIndexPaths: [IndexPath]!
+    
     // MARK: LifeCycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         self.navigationController?.isToolbarHidden = false
+        
         mapViewSetup()
         performFetch()
         
@@ -42,7 +51,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         mapView.camera.altitude = 100000
     }
     
-    // MARK: Private functions
+    // MARK: Actions
     
     @IBAction private func loadNewPhotosCollection(_ sender: Any) {
         
@@ -83,9 +92,53 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }
     }
     
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        albumCollectionView.reloadData()
+    // MARK: NSFetchedResultsControllerDelegate
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        insertedIndexPaths = [IndexPath]()
+        deletedIndexPaths = [IndexPath]()
+        updatedIndexPaths = [IndexPath]()
     }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        switch type {
+            
+        case .insert:
+            insertedIndexPaths.append(newIndexPath!)
+            break
+            
+        case .delete:
+            deletedIndexPaths.append(indexPath!)
+            break
+            
+        case .update:
+            updatedIndexPaths.append(indexPath!)
+            break
+            
+        case .move:
+            print("Move an item. We don't expect to see this in this app.")
+            break
+        }
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        albumCollectionView.performBatchUpdates({() -> Void in
+            
+            for indexPath in self.insertedIndexPaths {
+                self.albumCollectionView.insertItems(at: [indexPath])
+            }
+            
+            for indexPath in self.deletedIndexPaths {
+                self.albumCollectionView.deleteItems(at: [indexPath])
+            }
+            
+            for indexPath in self.updatedIndexPaths {
+                self.albumCollectionView.reloadItems(at: [indexPath])
+            }
+            
+        }, completion: nil)
+    }
+    
 }
 
 extension AlbumCollectionViewController {
@@ -99,31 +152,22 @@ extension AlbumCollectionViewController {
             if photo.image == nil {
                 DispatchQueue.main.async {
                     cell.cellPicture.image = UIImage(named: "placeholder")
-                    cell.activityIndicatorForCell.stopAnimating()
                 }
             } else {
                 DispatchQueue.main.async {
                     cell.cellPicture.image = UIImage(data: photo.image!)
-                    cell.activityIndicatorForCell.stopAnimating()
                 }
             }
         }
-
         return cell
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        if let count = fetchedResultsController.sections?.count {
-            return count
-        }
-        return 0
+        return fetchedResultsController.sections?.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if let count  = fetchedResultsController.sections?.first?.numberOfObjects {
-            return count
-        }
-        return 0
+        return fetchedResultsController.sections?.first?.numberOfObjects ?? 0
     }
     
     // MARK: UICollectionViewLayout
