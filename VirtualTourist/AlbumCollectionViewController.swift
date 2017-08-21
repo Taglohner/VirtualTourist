@@ -13,7 +13,7 @@ import CoreData
 
 class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, NSFetchedResultsControllerDelegate {
     
-    // MARK: Outtlets
+    // MARK: Outlets
     
     @IBOutlet weak var albumCollectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
@@ -41,7 +41,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }
     }
     
-    // MARK: MapView
+  // MARK: - Actions and Helpers
     
     func mapViewSetup() {
         mapView.addAnnotation(pin as MKAnnotation)
@@ -51,12 +51,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         mapView.camera.altitude = 100000
     }
     
-    // MARK: Actions
-    
-    @IBAction private func loadNewPhotosCollection(_ sender: Any) {
-        
-    }
-    
+
     // MARK: Core Data
     
     lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
@@ -139,10 +134,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }, completion: nil)
     }
     
-}
-
-extension AlbumCollectionViewController {
-    
     // MARK: UICollectionViewDataSource
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -168,6 +159,24 @@ extension AlbumCollectionViewController {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return fetchedResultsController.sections?.first?.numberOfObjects ?? 0
+    }
+    
+    // MARK: UICollectionViewDelegate
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
+        if let index = selectedIndexes.index(of: indexPath) {
+            selectedIndexes.remove(at: index)
+        } else {
+            selectedIndexes.append(indexPath)
+        }
+        
+//        // Then reconfigure the cell
+//        configureCell(cell, atIndexPath: indexPath)
+//        
+//        // And update the buttom button
+//        updateBottomButton()
     }
     
     // MARK: UICollectionViewLayout

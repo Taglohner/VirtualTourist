@@ -24,8 +24,6 @@ struct CoreDataStack {
     
     // MARK: Initializers
     
-    
-    
     init?(modelName: String) {
         
         // Assumes the model is in the main bundle
@@ -101,7 +99,7 @@ internal extension CoreDataStack  {
         try coordinator.destroyPersistentStore(at: dbURL, ofType: NSSQLiteStoreType , options: nil)
         try addStoreCoordinator(NSSQLiteStoreType, configuration: nil, storeURL: dbURL, options: nil)
     }
-}
+} 
 
 // MARK: - CoreDataStack (Batch Processing in the Background)
 
@@ -137,7 +135,6 @@ extension CoreDataStack {
         // context). This last one might take some time and is done
         // in a background queue
         context.performAndWait() {
-            print("save")
             
             if self.context.hasChanges {
                 do {
@@ -148,8 +145,6 @@ extension CoreDataStack {
                 
                 // now we save in the background
                 self.persistingContext.perform() {
-                    
-                    print("save in persist")
                     do {
                         try self.persistingContext.save()
                     } catch {

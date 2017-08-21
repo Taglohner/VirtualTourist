@@ -156,6 +156,7 @@
 		12D82B111F4081D500846B09 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				12D82B211F408BB700846B09 /* CoreDataStack.swift */,
 				12D82ADF1F40818000846B09 /* AppDelegate.swift */,
 				12D82B231F408C5800846B09 /* Main.storyboard */,
 				12D82AE91F40818000846B09 /* Assets.xcassets */,
@@ -169,7 +170,7 @@
 		12D82B121F4081E000846B09 /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				12D82B201F408B9600846B09 /* CoreData */,
+				12D82B201F408B9600846B09 /* Model */,
 				12D82B1F1F408B7E00846B09 /* Network */,
 			);
 			name = Model;
@@ -185,17 +186,16 @@
 			name = Network;
 			sourceTree = "<group>";
 		};
-		12D82B201F408B9600846B09 /* CoreData */ = {
+		12D82B201F408B9600846B09 /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				12D82B211F408BB700846B09 /* CoreDataStack.swift */,
 				12D82B171F408B6E00846B09 /* Photo.swift */,
 				12D82B181F408B6E00846B09 /* Photo+CoreDataProperties.swift */,
 				12D82B191F408B6E00846B09 /* Pin.swift */,
 				12D82B1A1F408B6E00846B09 /* Pin+CoreDataProperties.swift */,
 				12D82AE61F40818000846B09 /* VirtualTourist.xcdatamodeld */,
 			);
-			name = CoreData;
+			name = Model;
 			sourceTree = "<group>";
 		};
 		12D82B281F408CDC00846B09 /* Controller */ = {

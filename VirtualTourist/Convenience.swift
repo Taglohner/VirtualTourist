@@ -35,6 +35,7 @@ extension RequestFlickrData {
             photo.pin = pin
             if let url = photo.url {
                 imageDataFrom(url) {(result) in
+                    
                     switch result {
                         
                     case .Success(let data):
