@@ -35,13 +35,11 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         
         mapViewSetup()
         performFetch()
+        updateBottomButtonMode()
         
         if fetchedResultsController.sections?.first?.numberOfObjects == 0 {
             RequestFlickrData.sharedInstance().getPhotosJSONFromFlickr(pin: pin)
         }
-        
-        updateBottomButtonMode()
-        
     }
     
   // MARK: - Actions and Helpers
@@ -54,7 +52,11 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         mapView.camera.altitude = 100000
     }
     @IBAction func bottomButton(_ sender: Any) {
-        print("working")
+        if selectedIndexes.isEmpty {
+            getNewPhotoCollection()
+        } else {
+            deleteSelectedPhotos()
+        }
     }
     
     func updateBottomButtonMode() {
@@ -65,7 +67,25 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }
     }
     
-
+    func getNewPhotoCollection() {
+        for photo in fetchedResultsController.fetchedObjects! {
+            AppDelegate.stack.context.delete(photo as! NSManagedObject)
+        }
+        RequestFlickrData.sharedInstance().getPhotosJSONFromFlickr(pin: pin)
+    }
+    
+    func deleteSelectedPhotos(){
+        var photosToDelete = [Photo]()
+        
+        for indexPath in selectedIndexes {
+            photosToDelete.append(fetchedResultsController.object(at: indexPath) as! Photo)
+        }
+        
+        for photo in photosToDelete {
+            AppDelegate.stack.context.delete(photo)
+        }
+    }
+    
     // MARK: Core Data
     
     lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
@@ -179,9 +199,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
-        print("cell tapped")
-        
-        // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
         if let index = selectedIndexes.index(of: indexPath) {
             selectedIndexes.remove(at: index)
         } else {
