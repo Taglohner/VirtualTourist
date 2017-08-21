@@ -32,7 +32,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         super.viewDidLoad()
         
         self.navigationController?.isToolbarHidden = false
-        
         mapViewSetup()
         performFetch()
         updateBottomButtonMode()
@@ -46,15 +45,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }
     }
     
-  // MARK: - Actions and Helpers
-    
-    func mapViewSetup() {
-        mapView.addAnnotation(pin as MKAnnotation)
-        mapView.centerCoordinate = pin.coordinate
-        mapView.isScrollEnabled = false
-        mapView.isZoomEnabled = false
-        mapView.camera.altitude = 100000
-    }
+    // MARK: - Actions and Helpers
     
     @IBAction func bottomButton(_ sender: Any) {
         if selectedIndexes.isEmpty {
@@ -62,6 +53,14 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         } else {
             deleteSelectedPhotos()
         }
+    }
+    
+    func mapViewSetup() {
+        mapView.addAnnotation(pin as MKAnnotation)
+        mapView.centerCoordinate = pin.coordinate
+        mapView.isScrollEnabled = false
+        mapView.isZoomEnabled = false
+        mapView.camera.altitude = 100000
     }
     
     func updateBottomButtonMode() {
@@ -85,12 +84,10 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         for indexPath in selectedIndexes {
             photosToDelete.append(fetchedResultsController.object(at: indexPath) as! Photo)
         }
-        
         for photo in photosToDelete {
             AppDelegate.stack.context.delete(photo)
-            
         }
-        AppDelegate.stack.save()
+        selectedIndexes = [IndexPath]()
     }
     
     // MARK: Core Data
@@ -113,80 +110,33 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }
     }
     
-    // MARK: NSFetchedResultsControllerDelegate
+    // MARK: UICollectionViewLayout
     
-    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        insertedIndexPaths = [IndexPath]()
-        deletedIndexPaths = [IndexPath]()
-        updatedIndexPaths = [IndexPath]()
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let collectionViewSize = collectionView.frame.size
+        let width =  (collectionViewSize.width / 3) - 4
+        let height = width
+        return CGSize(width: width, height: height)
     }
     
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        switch type {
-            
-        case .insert:
-            insertedIndexPaths.append(newIndexPath!)
-            break
-            
-        case .delete:
-            deletedIndexPaths.append(indexPath!)
-            break
-            
-        case .update:
-            updatedIndexPaths.append(indexPath!)
-            break
-            
-        case .move:
-            print("Move an item. We don't expect to see this in this app.")
-            break
-        }
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        return UIEdgeInsetsMake(3, 3, 3, 3)
     }
     
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        albumCollectionView.performBatchUpdates({() -> Void in
-            
-            for indexPath in self.insertedIndexPaths {
-                self.albumCollectionView.insertItems(at: [indexPath])
-            }
-            
-            for indexPath in self.deletedIndexPaths {
-                self.albumCollectionView.deleteItems(at: [indexPath])
-            }
-            
-            for indexPath in self.updatedIndexPaths {
-                self.albumCollectionView.reloadItems(at: [indexPath])
-            }
-            
-        }, completion: nil)
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 3
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 3
     }
     
     // MARK: UICollectionViewDataSource
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "AlbumCell", for: indexPath) as! CollectionViewCell
-
-        self.configureCell(cell, atIndexPath: indexPath)
+        self.configureCell(cell, at: indexPath)
         return cell
-    }
-    
-    func configureCell(_ cell: CollectionViewCell, atIndexPath indexPath: IndexPath) {
-        let photo = self.fetchedResultsController.object(at: indexPath) as! Photo
-        
-        if photo.image == nil {
-            DispatchQueue.main.async {
-                cell.cellPicture.image = UIImage(named: "placeholder")
-            }
-        } else {
-            DispatchQueue.main.async {
-                cell.cellPicture.image = UIImage(data: photo.image!)
-            }
-        }
-        
-        if let _ = selectedIndexes.index(of: indexPath) {
-            cell.cellPicture.alpha = 0.05
-        } else {
-            cell.cellPicture.alpha = 1.0
-        }
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -208,29 +158,69 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
             selectedIndexes.append(indexPath)
         }
         
-        configureCell(cell, atIndexPath: indexPath)
+        configureCell(cell, at: indexPath)
         updateBottomButtonMode()
     }
     
-    // MARK: UICollectionViewLayout
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let collectionViewSize = collectionView.frame.size
-        let width =  (collectionViewSize.width / 3) - 4
-        let height = width
-        return CGSize(width: width, height: height)
+    func configureCell(_ cell: CollectionViewCell, at indexPath: IndexPath) {
+        let photo = self.fetchedResultsController.object(at: indexPath) as! Photo
+        
+        if photo.image == nil {
+            cell.cellPicture.image = UIImage(named: "placeholder")
+        } else {
+            DispatchQueue.main.async {
+                cell.cellPicture.image = UIImage(data: photo.image!)
+            }
+        }
+        if let _ = selectedIndexes.index(of: indexPath) {
+            cell.cellPicture.alpha = 0.05
+        } else {
+            cell.cellPicture.alpha = 1.0
+        }
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsetsMake(3, 3, 3, 3)
+    // MARK: NSFetchedResultsControllerDelegate
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        insertedIndexPaths = [IndexPath]()
+        deletedIndexPaths = [IndexPath]()
+        updatedIndexPaths = [IndexPath]()
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 3
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        switch type {
+        case .insert:
+            insertedIndexPaths.append(newIndexPath!)
+            break
+        case .delete:
+            deletedIndexPaths.append(indexPath!)
+            break
+        case .update:
+            updatedIndexPaths.append(indexPath!)
+            break
+        case .move:
+            print("Move an item. We don't expect to see this in this app.")
+            break
+        }
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return 3
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        albumCollectionView.performBatchUpdates({() -> Void in
+            
+            for indexPath in self.insertedIndexPaths {
+                self.albumCollectionView.insertItems(at: [indexPath])
+            }
+            
+            for indexPath in self.deletedIndexPaths {
+                self.albumCollectionView.deleteItems(at: [indexPath])
+            }
+            
+            for indexPath in self.updatedIndexPaths {
+                self.albumCollectionView.reloadItems(at: [indexPath])
+            }
+            self.updateBottomButtonMode()
+            
+        }, completion: nil)
     }
 }
 
