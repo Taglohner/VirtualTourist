@@ -132,11 +132,16 @@
                     </view>
                     <toolbarItems>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="vGk-XC-uCI"/>
-                        <barButtonItem title="New Collection" id="blq-0e-ehd"/>
+                        <barButtonItem title="New Collection" id="blq-0e-ehd">
+                            <connections>
+                                <action selector="bottomButton:" destination="oLg-FG-DXp" id="YGi-sp-3pL"/>
+                            </connections>
+                        </barButtonItem>
                         <barButtonItem style="plain" systemItem="flexibleSpace" id="yFr-cl-R7e"/>
                     </toolbarItems>
                     <connections>
                         <outlet property="albumCollectionView" destination="6V9-ah-Hqp" id="qn5-qb-FyT"/>
+                        <outlet property="bottomButtonOutlet" destination="blq-0e-ehd" id="Vdg-kJ-zqF"/>
                         <outlet property="mapView" destination="P3m-Zz-Tcs" id="3kw-bJ-wLf"/>
                     </connections>
                 </viewController>

@@ -14,7 +14,7 @@ import CoreData
 class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, NSFetchedResultsControllerDelegate {
     
     // MARK: Outlets
-    
+    @IBOutlet weak var bottomButtonOutlet: UIBarButtonItem!
     @IBOutlet weak var albumCollectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
     var pin = Pin()
@@ -39,6 +39,9 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         if fetchedResultsController.sections?.first?.numberOfObjects == 0 {
             RequestFlickrData.sharedInstance().getPhotosJSONFromFlickr(pin: pin)
         }
+        
+        updateBottomButtonMode()
+        
     }
     
   // MARK: - Actions and Helpers
@@ -49,6 +52,17 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         mapView.isScrollEnabled = false
         mapView.isZoomEnabled = false
         mapView.camera.altitude = 100000
+    }
+    @IBAction func bottomButton(_ sender: Any) {
+        print("working")
+    }
+    
+    func updateBottomButtonMode() {
+        if selectedIndexes.count > 0 {
+            bottomButtonOutlet.title = "Delete Selected Photos"
+        } else {
+            bottomButtonOutlet.title = "New Collection"
+        }
     }
     
 
@@ -165,6 +179,8 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         
+        print("cell tapped")
+        
         // Whenever a cell is tapped we will toggle its presence in the selectedIndexes array
         if let index = selectedIndexes.index(of: indexPath) {
             selectedIndexes.remove(at: index)
@@ -174,9 +190,8 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         
 //        // Then reconfigure the cell
 //        configureCell(cell, atIndexPath: indexPath)
-//        
-//        // And update the buttom button
-//        updateBottomButton()
+
+        updateBottomButtonMode()
     }
     
     // MARK: UICollectionViewLayout
