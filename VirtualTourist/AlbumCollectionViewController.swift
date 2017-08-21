@@ -36,6 +36,10 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         mapViewSetup()
         performFetch()
         updateBottomButtonMode()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
         if fetchedResultsController.sections?.first?.numberOfObjects == 0 {
             RequestFlickrData.sharedInstance().getPhotosJSONFromFlickr(pin: pin)
@@ -51,6 +55,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         mapView.isZoomEnabled = false
         mapView.camera.altitude = 100000
     }
+    
     @IBAction func bottomButton(_ sender: Any) {
         if selectedIndexes.isEmpty {
             getNewPhotoCollection()
@@ -83,7 +88,9 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         
         for photo in photosToDelete {
             AppDelegate.stack.context.delete(photo)
+            
         }
+        AppDelegate.stack.save()
     }
     
     // MARK: Core Data
@@ -103,21 +110,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
             try fetchedResultsController.performFetch()
         } catch let error {
             print("Failed to retrieve photos \(error)")
-        }
-    }
-    
-    private func clearData() {
-        do {
-            let context = AppDelegate.stack.context
-            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Photo")
-            fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin)
-            do {
-                let objects  = try context.fetch(fetchRequest) as? [NSManagedObject]
-                _ = objects.map{$0.map{context.delete($0)}}
-                AppDelegate.stack.save()
-            } catch let error {
-                print("ERROR DELETING : \(error)")
-            }
         }
     }
     
@@ -172,19 +164,29 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "AlbumCell", for: indexPath) as! CollectionViewCell
-        cell.activityIndicatorForCell.startAnimating()
-        if let photo = fetchedResultsController.object(at: indexPath) as? Photo {
-            if photo.image == nil {
-                DispatchQueue.main.async {
-                    cell.cellPicture.image = UIImage(named: "placeholder")
-                }
-            } else {
-                DispatchQueue.main.async {
-                    cell.cellPicture.image = UIImage(data: photo.image!)
-                }
+
+        self.configureCell(cell, atIndexPath: indexPath)
+        return cell
+    }
+    
+    func configureCell(_ cell: CollectionViewCell, atIndexPath indexPath: IndexPath) {
+        let photo = self.fetchedResultsController.object(at: indexPath) as! Photo
+        
+        if photo.image == nil {
+            DispatchQueue.main.async {
+                cell.cellPicture.image = UIImage(named: "placeholder")
+            }
+        } else {
+            DispatchQueue.main.async {
+                cell.cellPicture.image = UIImage(data: photo.image!)
             }
         }
-        return cell
+        
+        if let _ = selectedIndexes.index(of: indexPath) {
+            cell.cellPicture.alpha = 0.05
+        } else {
+            cell.cellPicture.alpha = 1.0
+        }
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -198,6 +200,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     // MARK: UICollectionViewDelegate
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let cell = collectionView.cellForItem(at: indexPath) as! CollectionViewCell
         
         if let index = selectedIndexes.index(of: indexPath) {
             selectedIndexes.remove(at: index)
@@ -205,9 +208,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
             selectedIndexes.append(indexPath)
         }
         
-//        // Then reconfigure the cell
-//        configureCell(cell, atIndexPath: indexPath)
-
+        configureCell(cell, atIndexPath: indexPath)
         updateBottomButtonMode()
     }
     
