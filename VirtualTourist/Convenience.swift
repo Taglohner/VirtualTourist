@@ -22,9 +22,7 @@ extension RequestFlickrData {
             case .Success(let data):
                 self.createPhotoEntityFrom(data, pin)
             case .Error(let message):
-                DispatchQueue.main.async {
-                    print(message)
-                }
+                print(message)
             }
         }
     }
@@ -42,9 +40,7 @@ extension RequestFlickrData {
                         photo.image = data
                         AppDelegate.stack.save()
                     case .Error(let message):
-                        DispatchQueue.main.async {
-                            print(message)
-                        }
+                        print(message)
                     }
                 }
             }

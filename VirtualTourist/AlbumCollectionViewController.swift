@@ -72,10 +72,21 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     }
     
     func getNewPhotoCollection() {
+        
         for photo in fetchedResultsController.fetchedObjects! {
             AppDelegate.stack.context.delete(photo as! NSManagedObject)
         }
+        
+        AppDelegate.stack.save()
+        
         RequestFlickrData.sharedInstance().getPhotosJSONFromFlickr(pin: pin)
+        
+        self.performFetch()
+        
+        DispatchQueue.main.async {
+
+            self.albumCollectionView.reloadData()
+        }
     }
     
     func deleteSelectedPhotos(){

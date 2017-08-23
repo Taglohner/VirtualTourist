@@ -29,9 +29,7 @@ class RequestFlickrData {
                     guard let photoArray = photos["pages"] as? Int else {
                         return completion(.Error(error?.localizedDescription ?? "Could not get the number of pages."))
                     }
-                    DispatchQueue.main.async {
-                        completion(.Success(photoArray))
-                    }
+                    completion(.Success(photoArray))
                 }
             } catch let error {
                 return completion(.Error(error.localizedDescription))
@@ -58,7 +56,6 @@ class RequestFlickrData {
         
         let url = self.URLFromParameters(parameters, FlickrURL.Scheme, FlickrURL.Host, FlickrURL.Path)
 
-        
         getNumberOfPages(url: url) {(result) in
             switch result {
                 
@@ -66,16 +63,13 @@ class RequestFlickrData {
                 numberOfPages = pages
                 print(numberOfPages)
             case .Error(let message):
-                DispatchQueue.main.async {
-                    print(message)
-                }
+                print(message)
             }
         
         let page = arc4random_uniform(UInt32(numberOfPages) + 1)
         parameters[FlickrURL.FlickrParameterKeys.Page] = page as AnyObject
         
         let url2 = self.URLFromParameters(parameters, FlickrURL.Scheme, FlickrURL.Host, FlickrURL.Path)
-        print(url2)
         
         self.session.dataTask(with: url2) { (data, response, error) in
             guard error == nil else {
@@ -93,9 +87,7 @@ class RequestFlickrData {
                     guard let photoArray = photos["photo"] as? [[String: AnyObject]] else {
                         return completion(.Error(error?.localizedDescription ?? "There are no new Items to show."))
                     }
-                    DispatchQueue.main.async {
-                        completion(.Success(photoArray))
-                    }
+                    completion(.Success(photoArray))
                 }
             } catch let error {
                 return completion(.Error(error.localizedDescription))
@@ -121,10 +113,9 @@ class RequestFlickrData {
             guard let data = data else {
                 return completion(.Error(error?.localizedDescription ?? "Invalid image data."))
             }
+        
+            completion(.Success(data))
             
-            DispatchQueue.main.async {
-                completion(.Success(data))
-            }
         }.resume()
     }
 
