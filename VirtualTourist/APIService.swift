@@ -11,11 +11,40 @@ import Foundation
 class RequestFlickrData {
     
     let session = URLSession.shared
-    var photoArray = [Photo]()
+    
+    func getNumberOfPages(url: URL, completion: @escaping (Result<Int>) -> Void) {
+        
+        session.dataTask(with: url) { (data, response, error) in
+            guard error == nil else {
+                return completion(.Error(error!.localizedDescription))
+            }
+            guard let data = data else {
+                return completion(.Error(error?.localizedDescription ?? "There are no new Items to show"))
+            }
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data, options: [.mutableContainers]) as? [String: AnyObject] {
+                    guard let photos = json["photos"] as? [String: AnyObject] else {
+                        return completion(.Error(error?.localizedDescription ?? "There are no new Items to show."))
+                    }
+                    guard let photoArray = photos["pages"] as? Int else {
+                        return completion(.Error(error?.localizedDescription ?? "Could not get the number of pages."))
+                    }
+                    DispatchQueue.main.async {
+                        completion(.Success(photoArray))
+                    }
+                }
+            } catch let error {
+                return completion(.Error(error.localizedDescription))
+            }
+            }.resume()
+    }
+    
     
     func getDataWith(_ latitude: String,_ longitude: String, completion: @escaping (Result<[[String: AnyObject]]>) -> Void) {
         
-        let parameters = [
+        var numberOfPages = 0
+        
+        var parameters = [
             FlickrURL.FlickrParameterKeys.Method         : FlickrURL.FlickrParameterValues.Method,
             FlickrURL.FlickrParameterKeys.APIKey         : FlickrURL.FlickrParameterValues.APIKey,
             FlickrURL.FlickrParameterKeys.Latitude       : latitude,
@@ -23,12 +52,32 @@ class RequestFlickrData {
             FlickrURL.FlickrParameterKeys.Extras         : FlickrURL.FlickrParameterValues.Extras,
             FlickrURL.FlickrParameterKeys.ResponseFormat : FlickrURL.FlickrParameterValues.ResponseFormat,
             FlickrURL.FlickrParameterKeys.NoJSONCallback : FlickrURL.FlickrParameterValues.NoJSONCallback,
-            FlickrURL.FlickrParameterKeys.PerPage        : FlickrURL.FlickrParameterValues.PerPage
+            FlickrURL.FlickrParameterKeys.PerPage        : FlickrURL.FlickrParameterValues.PerPage,
+    
             ] as [String : AnyObject]
         
-        let url = URLFromParameters(parameters, FlickrURL.Scheme, FlickrURL.Host, FlickrURL.Path)
+        let url = self.URLFromParameters(parameters, FlickrURL.Scheme, FlickrURL.Host, FlickrURL.Path)
+
         
-        session.dataTask(with: url) { (data, response, error) in
+        getNumberOfPages(url: url) {(result) in
+            switch result {
+                
+            case .Success(let pages):
+                numberOfPages = pages
+                print(numberOfPages)
+            case .Error(let message):
+                DispatchQueue.main.async {
+                    print(message)
+                }
+            }
+        
+        let page = arc4random_uniform(UInt32(numberOfPages) + 1)
+        parameters[FlickrURL.FlickrParameterKeys.Page] = page as AnyObject
+        
+        let url2 = self.URLFromParameters(parameters, FlickrURL.Scheme, FlickrURL.Host, FlickrURL.Path)
+        print(url2)
+        
+        self.session.dataTask(with: url2) { (data, response, error) in
             guard error == nil else {
                 return completion(.Error(error!.localizedDescription))
             }
@@ -52,7 +101,10 @@ class RequestFlickrData {
                 return completion(.Error(error.localizedDescription))
             }
             }.resume()
+        }
     }
+    
+
     
     func imageDataFrom(_ stringURL: String, completion: @escaping (Result<Data>) -> Void) {
 
@@ -75,11 +127,12 @@ class RequestFlickrData {
             }
         }.resume()
     }
-}
 
-enum Result <T>{
-    case Success(T)
-    case Error(String)
+    
+    enum Result <T> {
+        case Success(T)
+        case Error(String)
+    }
 }
 
 

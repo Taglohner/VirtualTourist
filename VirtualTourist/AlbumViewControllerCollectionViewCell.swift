@@ -14,5 +14,4 @@ class CollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var activityIndicatorForCell: UIActivityIndicatorView!
     @IBOutlet weak var cellPicture: UIImageView!
- 
 }

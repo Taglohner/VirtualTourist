@@ -23,6 +23,7 @@ struct FlickrURL {
         static let ResponseFormat = "format"
         static let NoJSONCallback = "nojsoncallback"
         static let PerPage = "per_page"
+        static let Page = "page"
     }
     
     struct FlickrParameterValues {
@@ -34,5 +35,6 @@ struct FlickrURL {
         static let ResponseFormat = "json"
         static let NoJSONCallback = "1"
         static let PerPage = "21"
+        static let Page = "1"
     }
 }
