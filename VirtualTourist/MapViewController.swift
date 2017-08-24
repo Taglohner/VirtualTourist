@@ -16,7 +16,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     
     @IBOutlet weak var mapView: MKMapView!
     var pin = Pin()
-
+    
     // MARK: LifeCycle
     
     override func viewDidLoad() {
@@ -55,7 +55,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             /* Get location */
             let location = gestureReconizer.location(in: mapView)
             let convertedLocation = mapView.convert(location, toCoordinateFrom: mapView)
-
+            
             /* Add annotation to the context */
             let pin = Pin(pinLatitude: convertedLocation.latitude, pinLongitude: convertedLocation.longitude, context: AppDelegate.stack.context)
             

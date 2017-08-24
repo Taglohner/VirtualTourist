@@ -34,7 +34,7 @@ struct FlickrURL {
         static let Extras = "url_m"
         static let ResponseFormat = "json"
         static let NoJSONCallback = "1"
-        static let PerPage = "21"
+        static let PerPage = "500"
         static let Page = "1"
     }
 }

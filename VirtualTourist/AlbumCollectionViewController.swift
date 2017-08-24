@@ -30,7 +30,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         self.navigationController?.isToolbarHidden = false
         mapViewSetup()
         performFetch()
@@ -39,34 +38,12 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
         if fetchedResultsController.sections?.first?.numberOfObjects == 0 {
-            loadPhotosFromFlickr()
+            RequestFlickrData.sharedInstance().loadPhotoCollectionFromFlickr(selectePin: self.pin)
         }
     }
     
-    // MARK: - Actions and Helpers
-    
-    func loadPhotosFromFlickr(){
-        RequestFlickrData.sharedInstance().getDataWith(pin: pin){ (result) in
-            
-            switch result {
-                
-            case .Success(let data):
-                for url in data {
-                    _ = Photo(SelectedPin: self.pin, urlString: url, context: AppDelegate.stack.context)
-                    AppDelegate.stack.save()
-                }
-             
-                DispatchQueue.main.async {
-                    self.albumCollectionView.reloadData()
-                }
-                
-            case .Error(let message):
-                print(message)
-            }
-        }
-    }
+    // MARK: Actions ans Helpers
     
     @IBAction func bottomButton(_ sender: Any) {
         if selectedIndexes.isEmpty {
@@ -93,27 +70,23 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     }
     
     func getNewPhotoCollection() {
-        
         for photo in fetchedResultsController.fetchedObjects as! [Photo] {
             AppDelegate.stack.context.delete(photo)
         }
-        
         AppDelegate.stack.save()
-        
-        loadPhotosFromFlickr()
+        RequestFlickrData.sharedInstance().loadPhotoCollectionFromFlickr(selectePin: self.pin)
     }
     
     func deleteSelectedPhotos(){
         var photosToDelete = [Photo]()
-        
         for indexPath in selectedIndexes {
             photosToDelete.append(fetchedResultsController.object(at: indexPath) as! Photo)
         }
-        
         for photo in photosToDelete {
             AppDelegate.stack.context.delete(photo)
         }
         selectedIndexes = [IndexPath]()
+        AppDelegate.stack.save()
     }
     
     // MARK: Core Data
@@ -177,42 +150,23 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let cell = collectionView.cellForItem(at: indexPath) as! CollectionViewCell
-        
         if let index = selectedIndexes.index(of: indexPath) {
             selectedIndexes.remove(at: index)
         } else {
             selectedIndexes.append(indexPath)
         }
-        
         configureCell(cell, at: indexPath)
         updateBottomButtonMode()
     }
     
     func configureCell(_ cell: CollectionViewCell, at indexPath: IndexPath) {
         
-        if let photo = self.fetchedResultsController.object(at: indexPath) as? Photo {
-            guard let url = photo.url else {
-                cell.cellPicture.image = UIImage(named: "placeholder")
-                print("invalid imageData URL")
-                return
+        if let photo = self.fetchedResultsController.object(at: indexPath) as? Photo, let photoImage = photo.image {
+            DispatchQueue.main.async {
+                cell.cellPicture.image = UIImage(data: photoImage)
             }
-            
-            RequestFlickrData.sharedInstance().imageDataFrom(url) {(result) in
-                
-                switch result {
-                    
-                case .Success(let data):
-                    DispatchQueue.main.async {
-                        cell.cellPicture.image = UIImage(data: data)
-                    }
-                    
-                case .Error(let message):
-                    DispatchQueue.main.async {
-                        cell.cellPicture.image = UIImage(named: "placeholder")
-                        print(message)
-                    }
-                }
-            }
+        } else {
+            cell.cellPicture.image = UIImage(named: "placeholder")
         }
         
         if let _ = selectedIndexes.index(of: indexPath) {
