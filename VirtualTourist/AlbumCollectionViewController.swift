@@ -41,11 +41,32 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         super.viewWillAppear(animated)
         
         if fetchedResultsController.sections?.first?.numberOfObjects == 0 {
-            RequestFlickrData.sharedInstance().getPhotosJSONFromFlickr(pin: pin)
+            loadPhotosFromFlickr()
         }
     }
     
     // MARK: - Actions and Helpers
+    
+    func loadPhotosFromFlickr(){
+        RequestFlickrData.sharedInstance().getDataWith(pin: pin){ (result) in
+            
+            switch result {
+                
+            case .Success(let data):
+                for url in data {
+                    _ = Photo(SelectedPin: self.pin, urlString: url, context: AppDelegate.stack.context)
+                    AppDelegate.stack.save()
+                }
+             
+                DispatchQueue.main.async {
+                    self.albumCollectionView.reloadData()
+                }
+                
+            case .Error(let message):
+                print(message)
+            }
+        }
+    }
     
     @IBAction func bottomButton(_ sender: Any) {
         if selectedIndexes.isEmpty {
@@ -73,20 +94,13 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     
     func getNewPhotoCollection() {
         
-        for photo in fetchedResultsController.fetchedObjects! {
-            AppDelegate.stack.context.delete(photo as! NSManagedObject)
+        for photo in fetchedResultsController.fetchedObjects as! [Photo] {
+            AppDelegate.stack.context.delete(photo)
         }
         
         AppDelegate.stack.save()
         
-        RequestFlickrData.sharedInstance().getPhotosJSONFromFlickr(pin: pin)
-        
-        self.performFetch()
-        
-        DispatchQueue.main.async {
-
-            self.albumCollectionView.reloadData()
-        }
+        loadPhotosFromFlickr()
     }
     
     func deleteSelectedPhotos(){
@@ -95,6 +109,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         for indexPath in selectedIndexes {
             photosToDelete.append(fetchedResultsController.object(at: indexPath) as! Photo)
         }
+        
         for photo in photosToDelete {
             AppDelegate.stack.context.delete(photo)
         }
@@ -174,15 +189,32 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     }
     
     func configureCell(_ cell: CollectionViewCell, at indexPath: IndexPath) {
-        let photo = self.fetchedResultsController.object(at: indexPath) as! Photo
         
-        if photo.image == nil {
-            cell.cellPicture.image = UIImage(named: "placeholder")
-        } else {
-            DispatchQueue.main.async {
-                cell.cellPicture.image = UIImage(data: photo.image!)
+        if let photo = self.fetchedResultsController.object(at: indexPath) as? Photo {
+            guard let url = photo.url else {
+                cell.cellPicture.image = UIImage(named: "placeholder")
+                print("invalid imageData URL")
+                return
+            }
+            
+            RequestFlickrData.sharedInstance().imageDataFrom(url) {(result) in
+                
+                switch result {
+                    
+                case .Success(let data):
+                    DispatchQueue.main.async {
+                        cell.cellPicture.image = UIImage(data: data)
+                    }
+                    
+                case .Error(let message):
+                    DispatchQueue.main.async {
+                        cell.cellPicture.image = UIImage(named: "placeholder")
+                        print(message)
+                    }
+                }
             }
         }
+        
         if let _ = selectedIndexes.index(of: indexPath) {
             cell.cellPicture.alpha = 0.05
         } else {
@@ -228,6 +260,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
             
             for indexPath in self.updatedIndexPaths {
                 self.albumCollectionView.reloadItems(at: [indexPath])
+                print("updatedIndexPaths has been called")
             }
             self.updateBottomButtonMode()
             

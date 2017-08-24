@@ -38,8 +38,10 @@ class RequestFlickrData {
     }
     
     
-    func getDataWith(_ latitude: String,_ longitude: String, completion: @escaping (Result<[[String: AnyObject]]>) -> Void) {
+    func getDataWith(pin: Pin, completion: @escaping (Result<[String]>) -> Void) {
         
+        let latitude = String(pin.latitude)
+        let longitude = String(pin.longitude)
         var numberOfPages = 0
         
         var parameters = [
@@ -55,13 +57,12 @@ class RequestFlickrData {
             ] as [String : AnyObject]
         
         let url = self.URLFromParameters(parameters, FlickrURL.Scheme, FlickrURL.Host, FlickrURL.Path)
-
+        
         getNumberOfPages(url: url) {(result) in
             switch result {
-                
             case .Success(let pages):
                 numberOfPages = pages
-                print(numberOfPages)
+                print("The request returned \(numberOfPages) pages.")
             case .Error(let message):
                 print(message)
             }
@@ -69,13 +70,12 @@ class RequestFlickrData {
         let page = arc4random_uniform(UInt32(numberOfPages) + 1)
         parameters[FlickrURL.FlickrParameterKeys.Page] = page as AnyObject
         
-        let url2 = self.URLFromParameters(parameters, FlickrURL.Scheme, FlickrURL.Host, FlickrURL.Path)
-        
-        self.session.dataTask(with: url2) { (data, response, error) in
+        let randomPageURL = self.URLFromParameters(parameters, FlickrURL.Scheme, FlickrURL.Host, FlickrURL.Path)
+        self.session.dataTask(with: randomPageURL) { (data, response, error) in
+            print("Network task executed with url: \(randomPageURL)")
             guard error == nil else {
                 return completion(.Error(error!.localizedDescription))
             }
-            
             guard let data = data else {
                 return completion(.Error(error?.localizedDescription ?? "There are no new Items to show"))
             }
@@ -84,10 +84,19 @@ class RequestFlickrData {
                     guard let photos = json["photos"] as? [String: AnyObject] else {
                         return completion(.Error(error?.localizedDescription ?? "There are no new Items to show."))
                     }
-                    guard let photoArray = photos["photo"] as? [[String: AnyObject]] else {
+                    guard let photosArray = photos["photo"] as? [[String: AnyObject]] else {
                         return completion(.Error(error?.localizedDescription ?? "There are no new Items to show."))
                     }
-                    completion(.Success(photoArray))
+                    
+                    var imagesURLArray = [String]()
+                    
+                    for photo in photosArray {
+                        guard let photoURL = photo["url_m"] as? String else {
+                            return completion(.Error(error?.localizedDescription ?? "Could not get Urls."))
+                        }
+                        imagesURLArray.append(photoURL)
+                    }
+                    completion(.Success(imagesURLArray))
                 }
             } catch let error {
                 return completion(.Error(error.localizedDescription))
@@ -96,7 +105,6 @@ class RequestFlickrData {
         }
     }
     
-
     
     func imageDataFrom(_ stringURL: String, completion: @escaping (Result<Data>) -> Void) {
 
@@ -118,14 +126,12 @@ class RequestFlickrData {
             
         }.resume()
     }
-
     
     enum Result <T> {
         case Success(T)
         case Error(String)
     }
 }
-
 
 extension RequestFlickrData {
     

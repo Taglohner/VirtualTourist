@@ -16,10 +16,11 @@ public class Photo: NSManagedObject {
         super.init(entity: entity, insertInto: context)
     }
     
-    init(dictionary: [String:AnyObject], context: NSManagedObjectContext) {
+    init(SelectedPin: Pin, urlString: String, context: NSManagedObjectContext) {
         let entity = NSEntityDescription.entity(forEntityName: "Photo", in: context)
         super.init(entity: entity!, insertInto: context)
-        url = dictionary["url_m"] as? String
+        url = urlString
+        pin = SelectedPin
     }
     
     init(photo: Data, context: NSManagedObjectContext) {

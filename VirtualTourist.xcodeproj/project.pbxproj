@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		12908DAA1F48EFEC0047DA0F /* Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12908DA91F48EFEC0047DA0F /* Convenience.swift */; };
 		12D82AE01F40818000846B09 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12D82ADF1F40818000846B09 /* AppDelegate.swift */; };
 		12D82AE81F40818000846B09 /* VirtualTourist.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 12D82AE61F40818000846B09 /* VirtualTourist.xcdatamodeld */; };
 		12D82AEA1F40818000846B09 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 12D82AE91F40818000846B09 /* Assets.xcassets */; };
@@ -46,7 +45,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		12908DA91F48EFEC0047DA0F /* Convenience.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Convenience.swift; sourceTree = "<group>"; };
 		12D82ADC1F40818000846B09 /* VirtualTourist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VirtualTourist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		12D82ADF1F40818000846B09 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		12D82AE71F40818000846B09 /* VirtualTourist.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = VirtualTourist.xcdatamodel; sourceTree = "<group>"; };
@@ -181,7 +179,6 @@
 			children = (
 				12D82B131F40892200846B09 /* Constants.swift */,
 				12D82B141F40892200846B09 /* APIService.swift */,
-				12908DA91F48EFEC0047DA0F /* Convenience.swift */,
 			);
 			name = Network;
 			sourceTree = "<group>";
@@ -353,7 +350,6 @@
 				12D82B261F408CD000846B09 /* MapViewController.swift in Sources */,
 				12D82B2E1F408F5D00846B09 /* AlbumViewControllerCollectionViewCell.swift in Sources */,
 				12D82B221F408BB700846B09 /* CoreDataStack.swift in Sources */,
-				12908DAA1F48EFEC0047DA0F /* Convenience.swift in Sources */,
 				12D82B1D1F408B6E00846B09 /* Pin.swift in Sources */,
 				12D82AE01F40818000846B09 /* AppDelegate.swift in Sources */,
 				12D82B2C1F408D3900846B09 /* ExtensionViewController.swift in Sources */,
