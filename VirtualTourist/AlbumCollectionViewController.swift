@@ -14,10 +14,12 @@ import CoreData
 class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDelegate, UICollectionViewDataSource, NSFetchedResultsControllerDelegate {
     
     // MARK: Outlets
+    
     @IBOutlet weak var bottomButtonOutlet: UIBarButtonItem!
     @IBOutlet weak var albumCollectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
     var pin = Pin()
+    
     
     // MARK: Indexes
     
@@ -25,6 +27,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     var insertedIndexPaths: [IndexPath]!
     var deletedIndexPaths: [IndexPath]!
     var updatedIndexPaths: [IndexPath]!
+    
     
     // MARK: LifeCycle
     
@@ -43,9 +46,11 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }
     }
     
+    
     // MARK: Actions ans Helpers
     
     @IBAction func bottomButton(_ sender: Any) {
+       
         if selectedIndexes.isEmpty {
             getNewPhotoCollection()
         } else {
@@ -70,6 +75,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     }
     
     func getNewPhotoCollection() {
+
         for photo in fetchedResultsController.fetchedObjects as! [Photo] {
             AppDelegate.stack.context.delete(photo)
         }
@@ -88,6 +94,15 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         selectedIndexes = [IndexPath]()
         AppDelegate.stack.save()
     }
+    
+    func bottomButton(isEnable: Bool) {
+        if isEnable {
+            self.bottomButtonOutlet.isEnabled = true
+        } else {
+            self.bottomButtonOutlet.isEnabled = false
+        }
+    }
+    
     
     // MARK: Core Data
     
@@ -108,6 +123,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
             print("Failed to retrieve photos \(error)")
         }
     }
+    
     
     // MARK: UICollectionViewLayout
     
@@ -130,12 +146,34 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         return 3
     }
     
+    
     // MARK: UICollectionViewDataSource
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "AlbumCell", for: indexPath) as! CollectionViewCell
-        self.configureCell(cell, at: indexPath)
+        configureCell(cell, at: indexPath)
         return cell
+    }
+    
+    func configureCell(_ cell: CollectionViewCell, at indexPath: IndexPath) {
+        
+        cell.activityIndicatorForCell.hidesWhenStopped = true
+        cell.activityIndicatorForCell.startAnimating()
+
+        if let photo = self.fetchedResultsController.object(at: indexPath) as? Photo, let photoImage = photo.image {
+            DispatchQueue.main.async {
+                cell.cellPicture.image = UIImage(data: photoImage)
+                cell.activityIndicatorForCell.stopAnimating()
+            }
+        } else {
+            cell.cellPicture.image = UIImage(named: "placeholder")
+        }
+        
+        if let _ = selectedIndexes.index(of: indexPath) {
+            cell.cellPicture.alpha = 0.2
+        } else {
+            cell.cellPicture.alpha = 1.0
+        }
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -145,6 +183,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return fetchedResultsController.sections?.first?.numberOfObjects ?? 0
     }
+    
     
     // MARK: UICollectionViewDelegate
     
@@ -158,23 +197,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         configureCell(cell, at: indexPath)
         updateBottomButtonMode()
     }
-    
-    func configureCell(_ cell: CollectionViewCell, at indexPath: IndexPath) {
-        
-        if let photo = self.fetchedResultsController.object(at: indexPath) as? Photo, let photoImage = photo.image {
-            DispatchQueue.main.async {
-                cell.cellPicture.image = UIImage(data: photoImage)
-            }
-        } else {
-            cell.cellPicture.image = UIImage(named: "placeholder")
-        }
-        
-        if let _ = selectedIndexes.index(of: indexPath) {
-            cell.cellPicture.alpha = 0.05
-        } else {
-            cell.cellPicture.alpha = 1.0
-        }
-    }
+
     
     // MARK: NSFetchedResultsControllerDelegate
     
@@ -214,12 +237,15 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
             
             for indexPath in self.updatedIndexPaths {
                 self.albumCollectionView.reloadItems(at: [indexPath])
-                print("updatedIndexPaths has been called")
             }
-            self.updateBottomButtonMode()
             
         }, completion: nil)
+        
+        self.updateBottomButtonMode()
+        self.bottomButton(isEnable: true)
+        
     }
+    
 }
 
 

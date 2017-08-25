@@ -21,6 +21,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setMapRegion()
         navigationItem.rightBarButtonItem = editButtonItem
         addGestureRecognizer()
     }
@@ -40,6 +41,32 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         mapView.addGestureRecognizer(gestureRecognizer)
     }
     
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        
+        UserDefaults.standard.set(Double(mapView.region.center.latitude), forKey: "mapRegionLatitude")
+        UserDefaults.standard.set(Double(mapView.region.center.longitude), forKey: "mapRegionLongitude")
+        UserDefaults.standard.set(Double(mapView.region.span.latitudeDelta), forKey: "mapRegionSpanlatitudeDelta")
+        UserDefaults.standard.set(Double(mapView.region.span.longitudeDelta), forKey: "mapRegionSpanlongitudeDelta")
+    }
+    
+    func setMapRegion(){
+        
+        var mapViewRegion = MKCoordinateRegion()
+        let hasLaunchedBefore = UserDefaults.standard.value(forKey: "hasLaunchedBefore")
+        
+        if hasLaunchedBefore != nil {
+            
+            mapViewRegion.center.latitude = UserDefaults.standard.double(forKey: "mapRegionLatitude")
+            mapViewRegion.center.longitude = UserDefaults.standard.double(forKey: "mapRegionLongitude")
+            mapViewRegion.span.latitudeDelta = UserDefaults.standard.double(forKey: "mapRegionSpanlatitudeDelta")
+            mapViewRegion.span.longitudeDelta = UserDefaults.standard.double(forKey: "mapRegionSpanlongitudeDelta")
+            mapView.setRegion(mapViewRegion, animated: true)
+        }
+        else {
+            UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+        }
+    }
+
     private func createAnnotationFrom(_ location: CGPoint) -> MKPointAnnotation {
         let location = location
         let coordinate = mapView.convert(location, toCoordinateFrom: mapView)

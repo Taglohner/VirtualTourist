@@ -7,11 +7,22 @@
 //
 
 import UIKit
+import MapKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var window: UIWindow?
+    
+//    func checkIfFirstLaunch() {
+//        if UserDefaults.standard.bool(forKey: "hasLaunchedBefore") {
+//            print("App has launched before")
+//        } else {
+//            UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+//            UserDefaults.standard.synchronize()
+//        }
+//    }
+    
     static let stack = CoreDataStack(modelName: "VirtualTourist")!
     
     // MARK: UIApplicationDelegate
