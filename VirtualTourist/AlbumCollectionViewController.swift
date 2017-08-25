@@ -42,7 +42,8 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if fetchedResultsController.sections?.first?.numberOfObjects == 0 {
-            RequestFlickrData.sharedInstance().loadPhotoCollectionFromFlickr(selectePin: self.pin)
+            bottomButtonOutlet.isEnabled = false
+            loadPhotoCollectionFromFlickr()
         }
     }
     
@@ -50,7 +51,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     // MARK: Actions ans Helpers
     
     @IBAction func bottomButton(_ sender: Any) {
-       
         if selectedIndexes.isEmpty {
             getNewPhotoCollection()
         } else {
@@ -75,12 +75,21 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     }
     
     func getNewPhotoCollection() {
-
+        bottomButtonOutlet.isEnabled = false
         for photo in fetchedResultsController.fetchedObjects as! [Photo] {
             AppDelegate.stack.context.delete(photo)
         }
+        
+        loadPhotoCollectionFromFlickr()
         AppDelegate.stack.save()
-        RequestFlickrData.sharedInstance().loadPhotoCollectionFromFlickr(selectePin: self.pin)
+    }
+    
+    func loadPhotoCollectionFromFlickr() {
+        RequestFlickrData.sharedInstance().loadPhotoCollectionFromFlickr(selectePin: self.pin) { (completion) in
+            if completion == self.fetchedResultsController.sections?[0].numberOfObjects {
+                self.bottomButtonOutlet.isEnabled = true
+            }
+        }
     }
     
     func deleteSelectedPhotos(){
@@ -93,14 +102,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }
         selectedIndexes = [IndexPath]()
         AppDelegate.stack.save()
-    }
-    
-    func bottomButton(isEnable: Bool) {
-        if isEnable {
-            self.bottomButtonOutlet.isEnabled = true
-        } else {
-            self.bottomButtonOutlet.isEnabled = false
-        }
     }
     
     
@@ -239,13 +240,10 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
                 self.albumCollectionView.reloadItems(at: [indexPath])
             }
             
-        }, completion: nil)
-        
-        self.updateBottomButtonMode()
-        self.bottomButton(isEnable: true)
-        
+        }, completion: { (true) in
+            self.updateBottomButtonMode()
+        })
     }
-    
 }
 
 

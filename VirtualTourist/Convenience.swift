@@ -10,7 +10,9 @@ import Foundation
 
 extension RequestFlickrData {
     
-    func loadPhotoCollectionFromFlickr(selectePin: Pin){
+    func loadPhotoCollectionFromFlickr(selectePin: Pin, completion: @escaping (Int) -> Void) {
+        
+        var counter = Int()
         
         RequestFlickrData.sharedInstance().getDataWith(pin: selectePin){ (result) in
             
@@ -28,16 +30,20 @@ extension RequestFlickrData {
                             DispatchQueue.main.async {
                                 photo.image = data
                                 AppDelegate.stack.save()
+                                completion(counter)
                             }
+                            counter += 1
+                            
                         case .Error(let message):
                             print(message)
                         }
                     }
                 }
+                
             case .Error(let message):
                 print(message)
             }
         }
     }
-
+ 
 }

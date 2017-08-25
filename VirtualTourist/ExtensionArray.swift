@@ -10,12 +10,15 @@ import Foundation
 
 extension Array {
     
-    // Returns an array containing this sequence shuffled
+    /* Returns an array containing this sequence shuffled */
+    
     var shuffled: Array {
         var elements = self
         return elements.shuffle()
     }
-    // Shuffles this sequence in place
+    
+    /* Shuffles this sequence in place */
+
     @discardableResult
     mutating func shuffle() -> Array {
         indices.dropLast().forEach {

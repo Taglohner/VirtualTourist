@@ -31,7 +31,8 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         self.navigationController?.setToolbarHidden(true, animated: false)
     }
     
-    // MARK: Gesture recognizer
+    
+    // MARK: MapView
     
     func addGestureRecognizer () {
         let gestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(newPin))
@@ -41,38 +42,18 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         mapView.addGestureRecognizer(gestureRecognizer)
     }
     
-    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-        
-        UserDefaults.standard.set(Double(mapView.region.center.latitude), forKey: "mapRegionLatitude")
-        UserDefaults.standard.set(Double(mapView.region.center.longitude), forKey: "mapRegionLongitude")
-        UserDefaults.standard.set(Double(mapView.region.span.latitudeDelta), forKey: "mapRegionSpanlatitudeDelta")
-        UserDefaults.standard.set(Double(mapView.region.span.longitudeDelta), forKey: "mapRegionSpanlongitudeDelta")
-    }
-    
-    func setMapRegion(){
-        
-        var mapViewRegion = MKCoordinateRegion()
-        let hasLaunchedBefore = UserDefaults.standard.value(forKey: "hasLaunchedBefore")
-        
-        if hasLaunchedBefore != nil {
-            
-            mapViewRegion.center.latitude = UserDefaults.standard.double(forKey: "mapRegionLatitude")
-            mapViewRegion.center.longitude = UserDefaults.standard.double(forKey: "mapRegionLongitude")
-            mapViewRegion.span.latitudeDelta = UserDefaults.standard.double(forKey: "mapRegionSpanlatitudeDelta")
-            mapViewRegion.span.longitudeDelta = UserDefaults.standard.double(forKey: "mapRegionSpanlongitudeDelta")
-            mapView.setRegion(mapViewRegion, animated: true)
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        let reuseId = "pin"
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
+        pinView?.animatesDrop = true
+        pinView?.isExclusiveTouch = true
+        if pinView == nil {
+            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
         }
         else {
-            UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+            pinView!.annotation = annotation
         }
-    }
-
-    private func createAnnotationFrom(_ location: CGPoint) -> MKPointAnnotation {
-        let location = location
-        let coordinate = mapView.convert(location, toCoordinateFrom: mapView)
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        return annotation
+        return pinView
     }
     
     func newPin(gestureReconizer: UILongPressGestureRecognizer) {
@@ -94,26 +75,14 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         }
     }
     
-    // MARK: MapViewDelegate
-    
-    /* Creates and customize the map annotaion view */
-    
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        let reuseId = "pin"
-        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
-        pinView?.animatesDrop = true
-        pinView?.isExclusiveTouch = true
-        if pinView == nil {
-            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-        }
-        else {
-            pinView!.annotation = annotation
-        }
-        return pinView
+    private func createAnnotationFrom(_ location: CGPoint) -> MKPointAnnotation {
+        let location = location
+        let coordinate = mapView.convert(location, toCoordinateFrom: mapView)
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        return annotation
     }
-    
-    /* Act on selected pin. If the view is in the editing mode delete tapped pins, else perfom Segue */
-    
+
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         pin = view.annotation as! Pin
         if isEditing {
@@ -126,13 +95,34 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         mapView.deselectAnnotation(mapView.annotations as? MKAnnotation, animated: true)
     }
     
-    /* Fetch pins and add them to the mapView after the map is rendered */
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        UserDefaults.standard.set(Double(mapView.region.center.latitude), forKey: "mapRegionLatitude")
+        UserDefaults.standard.set(Double(mapView.region.center.longitude), forKey: "mapRegionLongitude")
+        UserDefaults.standard.set(Double(mapView.region.span.latitudeDelta), forKey: "mapRegionSpanlatitudeDelta")
+        UserDefaults.standard.set(Double(mapView.region.span.longitudeDelta), forKey: "mapRegionSpanlongitudeDelta")
+    }
     
     func mapViewDidFinishRenderingMap(_ mapView: MKMapView, fullyRendered: Bool) {
         fetchDataAnd(.updateMap)
     }
-    
-    // MARK: Segues
+
+    func setMapRegion(){
+        var mapViewRegion = MKCoordinateRegion()
+        let hasLaunchedBefore = UserDefaults.standard.value(forKey: "hasLaunchedBefore")
+        
+        if hasLaunchedBefore != nil {
+            mapViewRegion.center.latitude = UserDefaults.standard.double(forKey: "mapRegionLatitude")
+            mapViewRegion.center.longitude = UserDefaults.standard.double(forKey: "mapRegionLongitude")
+            mapViewRegion.span.latitudeDelta = UserDefaults.standard.double(forKey: "mapRegionSpanlatitudeDelta")
+            mapViewRegion.span.longitudeDelta = UserDefaults.standard.double(forKey: "mapRegionSpanlongitudeDelta")
+            mapView.setRegion(mapViewRegion, animated: true)
+        }
+        else {
+            UserDefaults.standard.set(true, forKey: "hasLaunchedBefore")
+        }
+    }
+
+    // MARK: Actions and helpers
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "toAlbum" {
@@ -140,8 +130,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             destinationViewController.pin = self.pin
         }
     }
-    
-    // MARK: UI
     
     @IBAction func deleteAllPins(_ sender: Any) {
         mapView.removeAnnotations(mapView.annotations)
@@ -169,12 +157,17 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             let context = AppDelegate.stack.context
             let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Pin")
             do {
-                let objects  = try context.fetch(fetchRequest) as? [NSManagedObject]
-                switch action {
-                case .clearData:
-                    _ = objects.map{$0.map{context.delete($0)}}
-                case .updateMap:
-                    _ = objects.map{$0.map{mapView.addAnnotation($0 as! MKAnnotation)}}
+                if let objects  = try context.fetch(fetchRequest) as? [NSManagedObject] {
+                    switch action {
+                    case .clearData:
+                        for object in objects {
+                            context.delete(object)
+                        }
+                    case .updateMap:
+                        for object in objects {
+                            mapView.addAnnotation(object as! MKAnnotation)
+                        }
+                    }
                 }
                 AppDelegate.stack.save()
             } catch let error {
@@ -182,6 +175,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             }
         }
     }
+    
 }
 
 
