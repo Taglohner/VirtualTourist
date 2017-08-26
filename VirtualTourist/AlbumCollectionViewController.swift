@@ -18,8 +18,7 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     @IBOutlet weak var bottomButtonOutlet: UIBarButtonItem!
     @IBOutlet weak var albumCollectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
-    var pin = Pin()
-    
+    var pin: Pin?
     
     // MARK: Indexes
     
@@ -27,7 +26,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     var insertedIndexPaths: [IndexPath]!
     var deletedIndexPaths: [IndexPath]!
     var updatedIndexPaths: [IndexPath]!
-    
     
     // MARK: LifeCycle
     
@@ -47,7 +45,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         }
     }
     
-    
     // MARK: Actions ans Helpers
     
     @IBAction func bottomButton(_ sender: Any) {
@@ -59,8 +56,14 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     }
     
     func mapViewSetup() {
-        mapView.addAnnotation(pin as MKAnnotation)
-        mapView.centerCoordinate = pin.coordinate
+        
+        guard let annotation = pin else {
+            displayAlert("Error", "could not get details for the selected pin", "Dismiss")
+            return
+        }
+        
+        mapView.addAnnotation(annotation)
+        mapView.centerCoordinate = (annotation.coordinate)
         mapView.isScrollEnabled = false
         mapView.isZoomEnabled = false
         mapView.camera.altitude = 100000
@@ -85,7 +88,13 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     }
     
     func loadPhotoCollectionFromFlickr() {
-        RequestFlickrData.sharedInstance().loadPhotoCollectionFromFlickr(selectePin: self.pin) { (completion) in
+        
+        guard let annotation = pin else {
+            displayAlert("Error", "Could not get pictures for the selected pin.", "Dismiss")
+            return
+        }
+        
+        RequestFlickrData.sharedInstance().loadPhotoCollectionFromFlickr(selectePin: annotation) { (completion) in
             if completion == self.fetchedResultsController.sections?[0].numberOfObjects {
                 self.bottomButtonOutlet.isEnabled = true
             }
@@ -104,13 +113,12 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         AppDelegate.stack.save()
     }
     
-    
     // MARK: Core Data
     
     lazy var fetchedResultsController: NSFetchedResultsController<NSFetchRequestResult> = {
         let context = AppDelegate.stack.context
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Photo")
-        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin)
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin!)
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "url", ascending: true)]
         let frc = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: context, sectionNameKeyPath: nil, cacheName: nil)
         frc.delegate = self
@@ -124,7 +132,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
             print("Failed to retrieve photos \(error)")
         }
     }
-    
     
     // MARK: UICollectionViewLayout
     
@@ -146,7 +153,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
         return 3
     }
-    
     
     // MARK: UICollectionViewDataSource
     
@@ -185,7 +191,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         return fetchedResultsController.sections?.first?.numberOfObjects ?? 0
     }
     
-    
     // MARK: UICollectionViewDelegate
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -198,7 +203,6 @@ class AlbumCollectionViewController: UIViewController, UICollectionViewDelegateF
         configureCell(cell, at: indexPath)
         updateBottomButtonMode()
     }
-
     
     // MARK: NSFetchedResultsControllerDelegate
     

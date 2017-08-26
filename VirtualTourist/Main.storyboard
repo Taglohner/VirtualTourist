@@ -61,7 +61,7 @@
         <!--Album Collection View Controller-->
         <scene sceneID="aQX-tz-dhF">
             <objects>
-                <viewController id="oLg-FG-DXp" customClass="AlbumCollectionViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="AlbumCollectionViewController" id="oLg-FG-DXp" customClass="AlbumCollectionViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="qIh-U0-lnr"/>
                         <viewControllerLayoutGuide type="bottom" id="bJW-RI-jez"/>

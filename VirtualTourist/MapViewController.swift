@@ -15,7 +15,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     // MARK: Properties
     
     @IBOutlet weak var mapView: MKMapView!
-    var pin = Pin()
     
     // MARK: LifeCycle
     
@@ -30,7 +29,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
         super.viewWillAppear(animated)
         self.navigationController?.setToolbarHidden(true, animated: false)
     }
-    
     
     // MARK: MapView
     
@@ -84,13 +82,15 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     }
 
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        pin = view.annotation as! Pin
+        let pin = view.annotation as! Pin
         if isEditing {
             AppDelegate.stack.context.delete(pin)
             mapView.removeAnnotation(pin)
             AppDelegate.stack.save()
         } else {
-            performSegue(withIdentifier: "toAlbum", sender: self)
+            let destinationViewController = self.storyboard!.instantiateViewController(withIdentifier: "AlbumCollectionViewController") as! AlbumCollectionViewController
+            destinationViewController.pin = pin
+            self.navigationController!.pushViewController(destinationViewController, animated: true)
         }
         mapView.deselectAnnotation(mapView.annotations as? MKAnnotation, animated: true)
     }
@@ -123,13 +123,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
     }
 
     // MARK: Actions and helpers
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "toAlbum" {
-            let destinationViewController = segue.destination as! AlbumCollectionViewController
-            destinationViewController.pin = self.pin
-        }
-    }
     
     @IBAction func deleteAllPins(_ sender: Any) {
         mapView.removeAnnotations(mapView.annotations)
@@ -175,6 +168,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, UIGestureRecognize
             }
         }
     }
+    
     
 }
 
